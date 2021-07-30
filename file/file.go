@@ -14,3 +14,18 @@ func Exists(filename string) (bool, error) {
 	}
 	return false, err
 }
+
+// EnsureDirectory checks if the dirPath directory exists. If not, it
+// creates it.
+func EnsureDirectory(dirPath string) (bool, error) {
+	if dirExists, err := Exists(dirPath); err != nil {
+		return false, err
+	} else if !dirExists {
+		err = os.Mkdir(dirPath, 0755)
+		if err != nil {
+			return false, err
+		}
+		return false, nil
+	}
+	return true, nil
+}
