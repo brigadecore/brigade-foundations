@@ -165,6 +165,52 @@ func TestGetIntFromEnvVar(t *testing.T) {
 	}
 }
 
+func TestGetRequiredIntFromEnvVar(t *testing.T) {
+	testCases := []struct {
+		name       string
+		setup      func()
+		assertions func()
+	}{
+		{
+			name: "env var does not exist",
+			assertions: func() {
+				_, err := GetRequiredIntFromEnvVar("INT1")
+				require.Error(t, err)
+
+			},
+		},
+		{
+			name: "env var exists but is not parsable as an int",
+			setup: func() {
+				os.Setenv("INT2", "foo")
+			},
+			assertions: func() {
+				_, err := GetRequiredIntFromEnvVar("INT2")
+				require.Error(t, err)
+				require.Contains(t, err.Error(), "not parsable as an int")
+			},
+		},
+		{
+			name: "env var exists and is parsable as an int",
+			setup: func() {
+				os.Setenv("INT3", "42")
+			},
+			assertions: func() {
+				val, err := GetRequiredIntFromEnvVar("INT3")
+				require.NoError(t, err)
+				require.Equal(t, 42, val)
+			},
+		},
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			if testCase.setup != nil {
+				testCase.setup()
+			}
+			testCase.assertions()
+		})
+	}
+}
 func TestGetBoolFromEnvVar(t *testing.T) {
 	testCases := []struct {
 		name       string
