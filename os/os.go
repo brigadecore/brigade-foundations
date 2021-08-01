@@ -63,6 +63,32 @@ func GetIntFromEnvVar(name string, defaultValue int) (int, error) {
 	return val, nil
 }
 
+// GetRequiredIntFromEnvVar attempts to parse an integer from a string value
+// retrieved from the specified environment variable. An error is returned if
+// the string value cannot successfully be parsed as an integer. An error is
+// also returned if the string value was the empty string.
+func GetRequiredIntFromEnvVar(name string) (int, error) {
+	valStr := os.Getenv(name)
+	if valStr == "" {
+		return 0, errors.Errorf(
+			"value not found for required environment variable %s",
+			name,
+		)
+	}
+	// An int is 32 or 64 bits depending on the underlying CPU architecture.
+	// Here, we cater to the lowest common denominator. strconv.ParseInt
+	// will return an error if the value doesn't fit in 32 bits.
+	val, err := strconv.ParseInt(valStr, 10, 32)
+	if err != nil {
+		return 0, errors.Errorf(
+			"value %q for environment variable %s was not parsable as an int",
+			valStr,
+			name,
+		)
+	}
+	return int(val), nil
+}
+
 // GetBoolFromEnvVar attempts to parse a bool from a string value retrieved from
 // the specified environment variable. An error is returned if the string value
 // cannot successfully be parsed as a bool.
