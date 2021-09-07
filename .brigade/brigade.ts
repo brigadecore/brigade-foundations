@@ -3,16 +3,16 @@ import { events, Event, Job, ConcurrentGroup } from "@brigadecore/brigadier"
 const goImg = "brigadecore/go-tools:v0.1.0"
 const localPath = "/workspaces/brigade-foundations"
 
-// MakeTargetJob is just a job wrapper around a make target.
+// MakeTargetJob is just a job wrapper around one or more make targets.
 class MakeTargetJob extends Job {
-  constructor(target: string, img: string, event: Event, env?: {[key: string]: string}) {
-    super(target, img, event)
+  constructor(targets: string[], img: string, event: Event, env?: {[key: string]: string}) {
+    super(targets[0], img, event)
     this.primaryContainer.sourceMountPath = localPath
     this.primaryContainer.workingDirectory = localPath
     this.primaryContainer.environment = env || {}
     this.primaryContainer.environment["SKIP_DOCKER"] = "true"
     this.primaryContainer.command = [ "make" ]
-    this.primaryContainer.arguments = [ target ]
+    this.primaryContainer.arguments = targets
   }
 }
 
@@ -22,13 +22,15 @@ const jobs: {[key: string]: (event: Event) => Job } = {}
 
 const testUnitJobName = "test-unit"
 const testUnitJob = (event: Event) => {
-  return new MakeTargetJob(testUnitJobName, goImg, event)
+  return new MakeTargetJob([testUnitJobName, "upload-code-coverage"], goImg, event, {
+    "CODECOV_TOKEN": event.project.secrets.codecovToken
+  })
 }
 jobs[testUnitJobName] = testUnitJob
 
 const lintJobName = "lint"
 const lintJob = (event: Event) => {
-  return new MakeTargetJob(lintJobName, goImg, event)
+  return new MakeTargetJob([lintJobName], goImg, event)
 }
 jobs[lintJobName] = lintJob
 

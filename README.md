@@ -1,5 +1,7 @@
 # Brigade Foundations
 
+[![codecov](https://codecov.io/gh/brigadecore/brigade-foundations/branch/main/graph/badge.svg?token=GU9DBS4YLP)](https://codecov.io/gh/brigadecore/brigade-foundations)
+
 Brigade Foundations is a Go module containing a number of foundational packages
 that are broadly used throughout various Brigade projects.
 

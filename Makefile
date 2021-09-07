@@ -42,3 +42,13 @@ test-unit:
 			-covermode=atomic \
 			./... \
 	'
+
+################################################################################
+# Upload Code Coverage Reports                                                 #
+################################################################################
+
+.PHONY: upload-code-coverage
+upload-code-coverage:
+	$(GO_DOCKER_CMD) bash -c ' \
+		bash <(curl -s https://codecov.io/bash) \
+	'
