@@ -2,12 +2,13 @@ package os
 
 import (
 	"net"
-	"os"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 )
+
+const testEnvVarName = "FOO"
 
 func TestGetEnvVar(t *testing.T) {
 	const testDefaultVal = "default"
@@ -17,19 +18,22 @@ func TestGetEnvVar(t *testing.T) {
 		assertions func()
 	}{
 		{
-			name: "env var exists",
-			setup: func() {
-				err := os.Setenv("FOO1", "foo")
-				require.NoError(t, err)
-			},
+			name: "env var does not exist",
 			assertions: func() {
-				require.Equal(t, "foo", GetEnvVar("FOO1", testDefaultVal))
+				require.Equal(
+					t,
+					testDefaultVal,
+					GetEnvVar(testEnvVarName, testDefaultVal),
+				)
 			},
 		},
 		{
-			name: "env var does not exist",
+			name: "env var exists",
+			setup: func() {
+				t.Setenv(testEnvVarName, "foo")
+			},
 			assertions: func() {
-				require.Equal(t, testDefaultVal, GetEnvVar("FOO2", testDefaultVal))
+				require.Equal(t, "foo", GetEnvVar(testEnvVarName, testDefaultVal))
 			},
 		},
 	}
@@ -50,22 +54,21 @@ func TestGetRequiredEnvVar(t *testing.T) {
 		assertions func()
 	}{
 		{
-			name: "env var exists",
-			setup: func() {
-				err := os.Setenv("BAR1", "bar")
-				require.NoError(t, err)
-			},
+			name: "env var does not exist",
 			assertions: func() {
-				val, err := GetRequiredEnvVar("BAR1")
-				require.NoError(t, err)
-				require.Equal(t, "bar", val)
+				_, err := GetRequiredEnvVar(testEnvVarName)
+				require.Error(t, err)
 			},
 		},
 		{
-			name: "env var does not exist",
+			name: "env var exists",
+			setup: func() {
+				t.Setenv(testEnvVarName, "foo")
+			},
 			assertions: func() {
-				_, err := GetRequiredEnvVar("BAR2")
-				require.Error(t, err)
+				val, err := GetRequiredEnvVar(testEnvVarName)
+				require.NoError(t, err)
+				require.Equal(t, "foo", val)
 			},
 		},
 	}
@@ -87,21 +90,20 @@ func TestGetStringSliceFromEnvVar(t *testing.T) {
 		assertions func()
 	}{
 		{
-			name: "env var exists",
-			setup: func() {
-				err := os.Setenv("LIST1", "a,b,c")
-				require.NoError(t, err)
-			},
+			name: "env var does not exist",
 			assertions: func() {
-				val := GetStringSliceFromEnvVar("LIST1", testDefaultVal)
-				require.Equal(t, []string{"a", "b", "c"}, val)
+				val := GetStringSliceFromEnvVar(testEnvVarName, testDefaultVal)
+				require.Equal(t, testDefaultVal, val)
 			},
 		},
 		{
-			name: "env var does not exist",
+			name: "env var exists",
+			setup: func() {
+				t.Setenv(testEnvVarName, "a,b,c")
+			},
 			assertions: func() {
-				val := GetStringSliceFromEnvVar("LIST2", testDefaultVal)
-				require.Equal(t, testDefaultVal, val)
+				val := GetStringSliceFromEnvVar(testEnvVarName, testDefaultVal)
+				require.Equal(t, []string{"a", "b", "c"}, val)
 			},
 		},
 	}
@@ -123,21 +125,9 @@ func TestGetIntFromEnvVar(t *testing.T) {
 		assertions func()
 	}{
 		{
-			name: "env var exists",
-			setup: func() {
-				err := os.Setenv("BAT1", "42")
-				require.NoError(t, err)
-			},
-			assertions: func() {
-				val, err := GetIntFromEnvVar("BAT1", testDefaultVal)
-				require.NoError(t, err)
-				require.Equal(t, 42, val)
-			},
-		},
-		{
 			name: "env var does not exist",
 			assertions: func() {
-				val, err := GetIntFromEnvVar("BAT2", testDefaultVal)
+				val, err := GetIntFromEnvVar(testEnvVarName, testDefaultVal)
 				require.NoError(t, err)
 				require.Equal(t, testDefaultVal, val)
 			},
@@ -145,13 +135,23 @@ func TestGetIntFromEnvVar(t *testing.T) {
 		{
 			name: "env var value not parsable as int",
 			setup: func() {
-				err := os.Setenv("BAT3", "life, the universe, and everything")
-				require.NoError(t, err)
+				t.Setenv(testEnvVarName, "life, the universe, and everything")
 			},
 			assertions: func() {
-				_, err := GetIntFromEnvVar("BAT3", testDefaultVal)
+				_, err := GetIntFromEnvVar(testEnvVarName, testDefaultVal)
 				require.Error(t, err)
 				require.Contains(t, err.Error(), "was not parsable as an int")
+			},
+		},
+		{
+			name: "env var exists",
+			setup: func() {
+				t.Setenv(testEnvVarName, "42")
+			},
+			assertions: func() {
+				val, err := GetIntFromEnvVar(testEnvVarName, testDefaultVal)
+				require.NoError(t, err)
+				require.Equal(t, 42, val)
 			},
 		},
 	}
@@ -174,7 +174,7 @@ func TestGetRequiredIntFromEnvVar(t *testing.T) {
 		{
 			name: "env var does not exist",
 			assertions: func() {
-				_, err := GetRequiredIntFromEnvVar("INT1")
+				_, err := GetRequiredIntFromEnvVar(testEnvVarName)
 				require.Error(t, err)
 
 			},
@@ -182,10 +182,10 @@ func TestGetRequiredIntFromEnvVar(t *testing.T) {
 		{
 			name: "env var exists but is not parsable as an int",
 			setup: func() {
-				os.Setenv("INT2", "foo")
+				t.Setenv(testEnvVarName, "foo")
 			},
 			assertions: func() {
-				_, err := GetRequiredIntFromEnvVar("INT2")
+				_, err := GetRequiredIntFromEnvVar(testEnvVarName)
 				require.Error(t, err)
 				require.Contains(t, err.Error(), "not parsable as an int")
 			},
@@ -193,10 +193,10 @@ func TestGetRequiredIntFromEnvVar(t *testing.T) {
 		{
 			name: "env var exists and is parsable as an int",
 			setup: func() {
-				os.Setenv("INT3", "42")
+				t.Setenv(testEnvVarName, "42")
 			},
 			assertions: func() {
-				val, err := GetRequiredIntFromEnvVar("INT3")
+				val, err := GetRequiredIntFromEnvVar(testEnvVarName)
 				require.NoError(t, err)
 				require.Equal(t, 42, val)
 			},
@@ -211,6 +211,7 @@ func TestGetRequiredIntFromEnvVar(t *testing.T) {
 		})
 	}
 }
+
 func TestGetBoolFromEnvVar(t *testing.T) {
 	testCases := []struct {
 		name       string
@@ -218,21 +219,9 @@ func TestGetBoolFromEnvVar(t *testing.T) {
 		assertions func()
 	}{
 		{
-			name: "env var exists",
-			setup: func() {
-				err := os.Setenv("BAZ1", "true")
-				require.NoError(t, err)
-			},
-			assertions: func() {
-				val, err := GetBoolFromEnvVar("BAZ1", false)
-				require.NoError(t, err)
-				require.Equal(t, true, val)
-			},
-		},
-		{
 			name: "env var does not exist",
 			assertions: func() {
-				val, err := GetBoolFromEnvVar("BAZ2", true)
+				val, err := GetBoolFromEnvVar(testEnvVarName, true)
 				require.NoError(t, err)
 				require.True(t, val)
 			},
@@ -240,13 +229,23 @@ func TestGetBoolFromEnvVar(t *testing.T) {
 		{
 			name: "env var value not parsable as int",
 			setup: func() {
-				err := os.Setenv("BAZ3", "not really")
-				require.NoError(t, err)
+				t.Setenv(testEnvVarName, "not really")
 			},
 			assertions: func() {
-				_, err := GetBoolFromEnvVar("BAZ3", false)
+				_, err := GetBoolFromEnvVar(testEnvVarName, false)
 				require.Error(t, err)
 				require.Contains(t, err.Error(), "was not parsable as a bool")
+			},
+		},
+		{
+			name: "env var exists",
+			setup: func() {
+				t.Setenv(testEnvVarName, "true")
+			},
+			assertions: func() {
+				val, err := GetBoolFromEnvVar(testEnvVarName, false)
+				require.NoError(t, err)
+				require.Equal(t, true, val)
 			},
 		},
 	}
@@ -268,21 +267,9 @@ func TestGetDurationFromEnvVar(t *testing.T) {
 		assertions func()
 	}{
 		{
-			name: "env var exists",
-			setup: func() {
-				err := os.Setenv("BAZ1", "20s")
-				require.NoError(t, err)
-			},
-			assertions: func() {
-				val, err := GetDurationFromEnvVar("BAZ1", testDefaultVal)
-				require.NoError(t, err)
-				require.Equal(t, 20*time.Second, val)
-			},
-		},
-		{
 			name: "env var does not exist",
 			assertions: func() {
-				val, err := GetDurationFromEnvVar("BAZ2", testDefaultVal)
+				val, err := GetDurationFromEnvVar(testEnvVarName, testDefaultVal)
 				require.NoError(t, err)
 				require.Equal(t, testDefaultVal, val)
 			},
@@ -290,13 +277,23 @@ func TestGetDurationFromEnvVar(t *testing.T) {
 		{
 			name: "env var value not parsable as duration",
 			setup: func() {
-				err := os.Setenv("BAZ3", "life, the universe, and everything")
-				require.NoError(t, err)
+				t.Setenv(testEnvVarName, "life, the universe, and everything")
 			},
 			assertions: func() {
-				_, err := GetDurationFromEnvVar("BAZ3", testDefaultVal)
+				_, err := GetDurationFromEnvVar(testEnvVarName, testDefaultVal)
 				require.Error(t, err)
 				require.Contains(t, err.Error(), "was not parsable as a duration")
+			},
+		},
+		{
+			name: "env var exists",
+			setup: func() {
+				t.Setenv(testEnvVarName, "20s")
+			},
+			assertions: func() {
+				val, err := GetDurationFromEnvVar(testEnvVarName, testDefaultVal)
+				require.NoError(t, err)
+				require.Equal(t, 20*time.Second, val)
 			},
 		},
 	}
@@ -324,7 +321,7 @@ func TestGetIPNetSliceFromEnvVar(t *testing.T) {
 		{
 			name: "env var does not exist",
 			assertions: func() {
-				val, err := GetIPNetSliceFromEnvVar("IPS", testDefaultVal)
+				val, err := GetIPNetSliceFromEnvVar(testEnvVarName, testDefaultVal)
 				require.NoError(t, err)
 				require.Equal(t, testDefaultVal, val)
 			},
@@ -332,28 +329,26 @@ func TestGetIPNetSliceFromEnvVar(t *testing.T) {
 		{
 			name: "error parsing env var",
 			setup: func() {
-				err := os.Setenv("IPS", "192.168.1.125") // Not CIDR
-				require.NoError(t, err)
+				t.Setenv(testEnvVarName, "192.168.1.125") // Not CIDR
 			},
 			assertions: func() {
-				_, err := GetIPNetSliceFromEnvVar("IPS", testDefaultVal)
+				_, err := GetIPNetSliceFromEnvVar(testEnvVarName, testDefaultVal)
 				require.Error(t, err)
 				require.Contains(
 					t,
 					err.Error(),
 					"was not parsable as a slice of CIDR address",
 				)
-				require.Contains(t, err.Error(), "IPS")
+				require.Contains(t, err.Error(), testEnvVarName)
 			},
 		},
 		{
 			name: "env var exists and is parsable",
 			setup: func() {
-				err := os.Setenv("IPS", "192.168.3.0/24,192.168.4.0/24")
-				require.NoError(t, err)
+				t.Setenv(testEnvVarName, "192.168.3.0/24,192.168.4.0/24")
 			},
 			assertions: func() {
-				val, err := GetIPNetSliceFromEnvVar("IPS", testDefaultVal)
+				val, err := GetIPNetSliceFromEnvVar(testEnvVarName, testDefaultVal)
 				require.NoError(t, err)
 				require.Len(t, val, 2)
 				require.Equal(t, "192.168.3.0/24", val[0].String())
