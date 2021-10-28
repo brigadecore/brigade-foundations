@@ -13,8 +13,8 @@ import (
 // program is terminated immediately with exit code 1.
 func Context() context.Context {
 	ctx, cancel := context.WithCancel(context.Background())
-	sigCh := make(chan os.Signal)
-	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+	sigCh := make(chan os.Signal, 5)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM) // nolint: govet
 	go func() {
 		sig := <-sigCh
 		cancel()
