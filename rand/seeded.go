@@ -22,6 +22,7 @@ type seeded struct {
 
 // NewSeeded returns a seeded, concurrency-safe random number generator.
 func NewSeeded() Seeded {
+	// nolint: gosec
 	rnd := mathrand.New(mathrand.NewSource(time.Now().UTC().UnixNano()))
 	return &seeded{
 		seededRand: rnd,

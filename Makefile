@@ -8,7 +8,7 @@ SHELL ?= /bin/bash
 
 ifneq ($(SKIP_DOCKER),true)
 	PROJECT_ROOT := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))
-	GO_DEV_IMAGE := brigadecore/go-tools:v0.4.0
+	GO_DEV_IMAGE := brigadecore/go-tools:v0.5.0
 
 	GO_DOCKER_CMD := docker run \
 		-it \
