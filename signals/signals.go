@@ -14,7 +14,7 @@ import (
 func Context() context.Context {
 	ctx, cancel := context.WithCancel(context.Background())
 	sigCh := make(chan os.Signal, 5)
-	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM) // nolint: govet
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		sig := <-sigCh
 		cancel()

@@ -22,7 +22,7 @@ func TestIPFilter(t *testing.T) {
 		name       string
 		filter     *ipFilter
 		setup      func() *http.Request
-		assertions func(handlerCalled bool, rr *httptest.ResponseRecorder)
+		assertions func(handlerCalled bool, r *http.Response)
 	}{
 		{
 			name: "X-FORWARDED-FOR contains no IP; " +
@@ -34,8 +34,8 @@ func TestIPFilter(t *testing.T) {
 				req.RemoteAddr = "foo" // Not a valid IP, obviously
 				return req
 			},
-			assertions: func(handlerCalled bool, rr *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, rr.Code)
+			assertions: func(handlerCalled bool, r *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, r.StatusCode)
 				require.False(t, handlerCalled)
 			},
 		},
@@ -48,8 +48,8 @@ func TestIPFilter(t *testing.T) {
 				req.Header.Add("X-FORWARDED-FOR", "foo") // Not a valid IP, obviously
 				return req
 			},
-			assertions: func(handlerCalled bool, rr *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusInternalServerError, rr.Code)
+			assertions: func(handlerCalled bool, r *http.Response) {
+				require.Equal(t, http.StatusInternalServerError, r.StatusCode)
 				require.False(t, handlerCalled)
 			},
 		},
@@ -66,8 +66,8 @@ func TestIPFilter(t *testing.T) {
 				req.Header.Add("X-FORWARDED-FOR", "192.168.2.125")
 				return req
 			},
-			assertions: func(handlerCalled bool, rr *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusForbidden, rr.Code)
+			assertions: func(handlerCalled bool, r *http.Response) {
+				require.Equal(t, http.StatusForbidden, r.StatusCode)
 				require.False(t, handlerCalled)
 			},
 		},
@@ -84,8 +84,8 @@ func TestIPFilter(t *testing.T) {
 				req.Header.Add("X-FORWARDED-FOR", "192.168.1.125")
 				return req
 			},
-			assertions: func(handlerCalled bool, rr *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusOK, rr.Code)
+			assertions: func(handlerCalled bool, r *http.Response) {
+				require.Equal(t, http.StatusOK, r.StatusCode)
 				require.True(t, handlerCalled)
 			},
 		},
@@ -99,7 +99,9 @@ func TestIPFilter(t *testing.T) {
 				handlerCalled = true
 				w.WriteHeader(http.StatusOK)
 			})(rr, req)
-			testCase.assertions(handlerCalled, rr)
+			res := rr.Result()
+			defer res.Body.Close()
+			testCase.assertions(handlerCalled, res)
 		})
 	}
 }
