@@ -3,6 +3,7 @@
 ![build](https://badgr.brigade2.io/v1/github/checks/brigadecore/brigade-foundations/badge.svg?appID=99005)
 [![codecov](https://codecov.io/gh/brigadecore/brigade-foundations/branch/main/graph/badge.svg?token=GU9DBS4YLP)](https://codecov.io/gh/brigadecore/brigade-foundations)
 [![Go Report Card](https://goreportcard.com/badge/github.com/brigadecore/brigade-foundations)](https://goreportcard.com/report/github.com/brigadecore/brigade-foundations)
+[![slack](https://img.shields.io/badge/slack-brigade-brightgreen.svg?logo=slack)](https://kubernetes.slack.com/messages/C87MF1RFD)
 
 Brigade Foundations is a Go module containing a number of foundational packages
 that are broadly used throughout various Brigade projects.
