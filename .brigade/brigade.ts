@@ -34,9 +34,6 @@ const lintJob = (event: Event) => {
 }
 jobs[lintJobName] = lintJob
 
-// Run the entire suite of tests WITHOUT publishing anything initially. If
-// EVERYTHING passes AND this was a push (merge, presumably) to the master
-// branch, then publish an "edge" image.
 async function runSuite(event: Event): Promise<void> {
   await new ConcurrentGroup( // Basic tests
     testUnitJob(event),
