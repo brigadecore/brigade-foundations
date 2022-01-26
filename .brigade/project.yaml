@@ -10,9 +10,8 @@ spec:
     qualifiers:
       repo: brigadecore/brigade-foundations
     types:
-    - check_run:rerequested
-    - check_suite:requested
-    - check_suite:rerequested
+    - ci:pipeline_requested
+    - ci:job_requested
   workerTemplate:
     git:
       cloneURL: https://github.com/brigadecore/brigade-foundations.git
