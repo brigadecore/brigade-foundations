@@ -8,11 +8,11 @@ import (
 )
 
 func TestNewSeeded(t *testing.T) {
-	rand := NewSeeded()
+	rand, ok := NewSeeded().(*seeded)
+	require.True(t, ok)
 	require.NotNil(t, rand)
-	require.IsType(t, &seeded{}, rand)
-	require.NotNil(t, rand.(*seeded).seededRand)
-	require.NotNil(t, rand.(*seeded).mut)
+	require.NotNil(t, rand.seededRand)
+	require.NotNil(t, rand.mut)
 }
 
 func TestIntn(t *testing.T) {

@@ -10,9 +10,9 @@ import (
 )
 
 func TestNewIPFilter(t *testing.T) {
-	filter := NewIPFilter(IPFilterConfig{})
-	require.IsType(t, &ipFilter{}, filter)
-	require.NotNil(t, filter.(*ipFilter).config)
+	filter, ok := NewIPFilter(IPFilterConfig{}).(*ipFilter)
+	require.True(t, ok)
+	require.NotNil(t, filter.config)
 }
 
 func TestIPFilter(t *testing.T) {

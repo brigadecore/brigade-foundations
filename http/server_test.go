@@ -52,14 +52,15 @@ func TestNewServer(t *testing.T) {
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			s := NewServer(
+			server, ok := NewServer(
 				http.HandlerFunc(
 					func(rw http.ResponseWriter, r *http.Request) {},
 				),
 				testCase.config,
-			)
-			require.NotNil(t, s.(*server).handler)
-			testCase.assertions(s.(*server))
+			).(*server)
+			require.True(t, ok)
+			require.NotNil(t, server.handler)
+			testCase.assertions(server)
 		})
 	}
 }
