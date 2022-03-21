@@ -1,6 +1,6 @@
 import { events, Event, Job, ConcurrentGroup } from "@brigadecore/brigadier"
 
-const goImg = "brigadecore/go-tools:v0.6.0"
+const goImg = "brigadecore/go-tools:v0.8.0"
 const localPath = "/workspaces/brigade-foundations"
 
 // MakeTargetJob is just a job wrapper around one or more make targets.
